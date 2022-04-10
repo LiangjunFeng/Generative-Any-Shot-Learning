@@ -7,4 +7,5 @@ Data: https://pan.baidu.com/s/13j7fQkydPUeHx8b2KXy7Sg Password: eo4d
 
 
 1. Requirement: ptorch==1.2.0
-2. The detailed command lines are listed in the main.py file of each model  
+2. Dowload the data, and put it in the Model&Data filefolder   
+3. The detailed command lines are listed in the main.py file of each model  
