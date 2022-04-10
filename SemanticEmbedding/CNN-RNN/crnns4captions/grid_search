@@ -1,0 +1,66 @@
+#!/bin/bash
+
+dataset_dir="/data0/1259115645/CNN-RNN/flowers"
+trainclasses_fn="trainclasses.txt"
+valclasses_fn="valclasses.txt"
+#testclasses_fn="testclasses.txt"
+testclasses_fn="allclasses.txt"
+image_dir="images"
+text_dir="text_c10"
+conv_channels_ar=("382 514 256")
+conv_kernels_ar=("4 4 4")
+conv_strides_ar=("3 3 2")
+rnn_num_layers="2"
+rnn_bidir_ar=("True")
+lstm_ar=("True")
+conv_dropout_ar="0."
+rnn_dropout_ar="0."
+lin_dropout_ar="0."
+batches="30000"
+learning_rate_ar="0.0007"
+lr_decay_ar=("-lrd")
+model_dir="/data0/1259115645/CNN-RNN/models_flo0"
+summary="/data0/1259115645/CNN-RNN/models_flo0/experiments.txt"
+device="cuda:0"
+
+
+for conv_channels in "${conv_channels_ar[@]}"; do
+for conv_kernels in "${conv_kernels_ar[@]}"; do
+for conv_strides in "${conv_strides_ar[@]}"; do
+for rnn_bidir in "${rnn_bidir_ar[@]}"; do
+for lstm in $lstm_ar; do
+for conv_dropout in $conv_dropout_ar; do
+for rnn_dropout in $rnn_dropout_ar; do
+for lin_dropout in $lin_dropout_ar; do
+for learning_rate in $learning_rate_ar; do
+for lr_decay in "${lr_decay_ar[@]}"; do
+    echo "Training -ch $conv_channels -k $conv_kernels -cs $conv_strides" \
+    -ls "$lstm -rb $rnn_bidir -lr $learning_rate $lr_decay"
+
+    CUDA_VISIBLE_DEVICES=2 nohup python -u train_text_encoder.py -d $dataset_dir \
+    -avc $trainclasses_fn -i $image_dir -t $text_dir \
+    -ch $conv_channels -k $conv_kernels -cs $conv_strides -rn $rnn_num_layers \
+    -rb $rnn_bidir -ls $lstm -ld $lin_dropout -cd $conv_dropout -rd $rnn_dropout -b $batches \
+    -lr $learning_rate $lr_decay -md $model_dir -dev $device -pe 50 > flo2.log 2>&1
+
+    echo "Evaluating on validation -ch $conv_channels -k $conv_kernels" \
+    "-cs $conv_strides $lstm $rnn_bidir -lr $learning_rate $lr_decay"
+
+    python evaluate_text_encoder.py -d $dataset_dir \
+    -avc $valclasses_fn -i $image_dir -t $text_dir \
+    -ch $conv_channels -k $conv_kernels -cs $conv_strides -rn $rnn_num_layers \
+    -rb $rnn_bidir -ls $lstm -cd $conv_dropout -rd $rnn_dropout -ld $lin_dropout -b $batches \
+    -lr $learning_rate $lr_decay -md $model_dir -s $summary -dev $device
+done
+done
+done
+done
+done
+done
+done
+done
+done
+done
+
+echo "Evaluating best model on test"
+python evaluate_best_text_encoder.py -d $dataset_dir -avc $testclasses_fn -i $image_dir -t $text_dir -md $model_dir -dev $device -s $summary -c

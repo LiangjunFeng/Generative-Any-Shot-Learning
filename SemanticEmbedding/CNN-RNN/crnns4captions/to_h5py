@@ -1,0 +1,10 @@
+#!/bin/bash
+
+dataset_dir="/data0/1259115645/CNN-RNN/flowers"
+image_dir="images"
+text_dir="text_c10"
+new_image_dir="images_lazy"
+new_text_dir="text_c10_lazy"
+
+python trans_to_h5.py -d $dataset_dir -i $image_dir -t $text_dir \
+-ni $new_image_dir -nt $new_text_dir
